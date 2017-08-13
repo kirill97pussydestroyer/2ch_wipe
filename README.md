@@ -16,7 +16,6 @@ post.set_text("**ALLO YOBA ETO TI**")  # Текст поста
 post.set_image("./yoba.png", "blob")   # Картинка поста и её отображаемое имя
 ```
 Не забудьте добавить прокси в файл proxies
-
 Можете рандомизировать текст с помощью модуля [markovify](https://github.com/jsvine/markovify)
 
 
