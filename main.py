@@ -16,11 +16,11 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 TIMEOUT = 5
 
-class CaptchaSolver:
+class CaptchaSolver_anticaptcha:
 	def __init__(self, key):
 		self.api = "https://api.anti-captcha.com/"
 		self.key = key
-		print("Solver initialized with key: " + self.key)
+		print("Solver 'anti-captcha' initialized with key: " + self.key)
 
 	def solve(self, image):
 		task = {}
@@ -32,12 +32,27 @@ class CaptchaSolver:
 		task["math"] = False
 		task["minLength"] = 6
 		task["maxLength"] = 6
-		data = requests.post(self.api + "createTask", json={"clientKey" : self.key, "task" : task}, verify=False).json()
+		data = requests.post(self.api + "createTask", json={"clientKey": self.key, "task": task}, verify=False).json()
 		if (data["errorId"] == 0):
 			while True:
 				response = requests.post(self.api + "getTaskResult", json={"clientKey" : self.key, "taskId" : str(data["taskId"])}, verify=False).json()
 				if (response["status"] == "ready"):
 					return response["solution"]["text"]
+				time.sleep(3)
+
+class CaptchaSolver_rucaptcha:
+	def __init__(self, key):
+		self.api = "https://rucaptcha.com/"
+		self.key = key
+		print("Solver 'rucaptcha' initialized with key: " + self.key)
+
+	def solve(self, image):
+		data = requests.post(self.api + "in.php", data={"key": self.key, "method": "base64", "body": base64.b64encode(image).decode("utf-8"), "numeric": 1, "min_len": 6, "max_len": 6, "json": 1}, verify=False).json()
+		if (data["status"] == 1):
+			while True:
+				response = requests.get(self.api + "res.php?key=" + self.key + "&action=get&id=" + data["request"] + "&json=1", verify=False).json()
+				if (response["status"] == 1):
+					return response["request"]
 				time.sleep(3)
 
 class Captcha:
@@ -120,7 +135,8 @@ class Wiper:
 		self.agents = [agent[:-1] for agent in open("useragents").readlines()]
 		self.board = board
 		self.thread = thread
-		self.solver = CaptchaSolver("anti-captcha.com api key")
+		self.solver = CaptchaSolver_anticaptcha("anti-captcha.com api key")
+#		self.solver = CaptchaSolver_rucaptcha("rucaptcha.com api key")
 
 	def send_post(self):
 		if (len(self.proxies) == 0): return False
